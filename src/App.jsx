@@ -37,13 +37,11 @@ export default function App() {
     setStatus('loading')
     setErrorMsg('')
 
-    const payload = { name, email, complaint };
-
     try {
-      const res = await fetch(apiEndpoint, {
+      const res = await fetch(import.meta.env.VITE_API_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ name: name, email: email, message: complaint }),
       });
 
       if (res.ok) {
