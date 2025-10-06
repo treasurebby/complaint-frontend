@@ -4,7 +4,7 @@ This is a small React + Vite + TailwindCSS frontend intended to be hosted as a s
 
 Quick start
 
-1. Copy `.env.example` to `.env` and set `VITE_API_ENDPOINT` to your API Gateway POST URL.
+1. Copy `.env.example` to `.env` and set `VITE_API_ENDPOINT` to your API Gateway POST URL. Make sure the value is the full POST endpoint including the `/complaints` path (example: `https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/complaints`).
 2. Install dependencies:
 
    npm install

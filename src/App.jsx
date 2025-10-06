@@ -1,6 +1,17 @@
 import React, { useState } from 'react'
 
-const apiEndpoint = import.meta.env.VITE_API_ENDPOINT || ''
+const rawEndpoint = import.meta.env.VITE_API_ENDPOINT || ''
+const apiEndpoint = (() => {
+  if (!rawEndpoint) return ''
+  try {
+    // Ensure there's no trailing slash and that the path contains /complaints
+    const cleaned = rawEndpoint.replace(/\/*$/, '')
+    if (/\/complaints(\/|$)/.test(cleaned)) return cleaned
+    return `${cleaned}/complaints`
+  } catch (e) {
+    return rawEndpoint
+  }
+})()
 
 function Field({ label, children }) {
   return (
