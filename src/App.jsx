@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || ''
+const apiEndpoint = import.meta.env.VITE_API_ENDPOINT || ''
 
 function Field({ label, children }) {
   return (
@@ -17,34 +17,50 @@ export default function App() {
   const [complaint, setComplaint] = useState('')
   const [status, setStatus] = useState('idle') // idle | loading | success | error
   const [errorMsg, setErrorMsg] = useState('')
+  const [errors, setErrors] = useState({})
 
-  const submit = async (e) => {
-    e.preventDefault()
+  const validate = () => {
+    const next = {}
+    if (!name.trim()) next.name = 'Name is required'
+    if (!email.trim()) next.email = 'Email is required'
+    else if (!/^\S+@\S+\.\S+$/.test(email)) next.email = 'Enter a valid email address'
+    if (!complaint.trim()) next.complaint = 'Please enter your complaint'
+    setErrors(next)
+    return Object.keys(next).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validate()) return
+
     setStatus('loading')
     setErrorMsg('')
 
-    try {
-      const payload = { name, email, complaint }
+    const payload = { name, email, complaint };
 
-      const res = await fetch(API_ENDPOINT, {
+    try {
+      const res = await fetch(apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      })
+      });
 
-      if (!res.ok) {
-        const text = await res.text()
-        throw new Error(text || `${res.status} ${res.statusText}`)
+      if (res.ok) {
+        setStatus('success')
+        setName('')
+        setEmail('')
+        setComplaint('')
+        // keep success UI instead of alert; also call alert for immediate feedback
+        // alert('Complaint sent successfully ✅');
+      } else {
+        setStatus('error')
+        setErrorMsg(`${res.status} ${res.statusText}`)
       }
-
-      setStatus('success')
-      setName('')
-      setEmail('')
-      setComplaint('')
     } catch (err) {
       console.error(err)
-      setErrorMsg(err.message || 'Network error')
       setStatus('error')
+      setErrorMsg(err.message || 'Network error')
     }
   }
 
@@ -54,7 +70,18 @@ export default function App() {
         <h1 className="text-center text-2xl font-semibold text-gray-800 mb-1">Customer Complaint Portal</h1>
         <p className="text-center text-sm text-gray-500 mb-6">We value your feedback — please tell us about your experience.</p>
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 relative">
+          {status === 'loading' && (
+            <div className="overlay">
+              <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow">
+                <svg className="animate-spin h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                <div className="text-sm text-gray-700">Sending complaint...</div>
+              </div>
+            </div>
+          )}
           <div>
             <Field label="Name">
               <input
@@ -65,6 +92,7 @@ export default function App() {
                 type="text"
                 placeholder="Full name"
               />
+              {errors.name && <div className="text-xs text-red-600 mt-1">{errors.name}</div>}
             </Field>
           </div>
 
@@ -78,6 +106,7 @@ export default function App() {
                 type="email"
                 placeholder="you@example.com"
               />
+              {errors.email && <div className="text-xs text-red-600 mt-1">{errors.email}</div>}
             </Field>
           </div>
 
@@ -91,6 +120,7 @@ export default function App() {
                 rows={5}
                 placeholder="Describe your issue..."
               />
+              {errors.complaint && <div className="text-xs text-red-600 mt-1">{errors.complaint}</div>}
             </Field>
           </div>
 
@@ -118,7 +148,15 @@ export default function App() {
 
         <div className="mt-6">
           {status === 'success' && (
-            <div className="rounded-md bg-green-50 p-3 text-green-800 text-sm">Thanks — your complaint has been submitted. We'll follow up if needed.</div>
+            <div className="thankyou">
+              <div className="check">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6L9 17l-5-5" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="text-sm font-medium text-green-700">Thanks — your complaint has been submitted.</div>
+              <div className="text-xs text-gray-500">We'll follow up if needed.</div>
+            </div>
           )}
 
           {status === 'error' && (
